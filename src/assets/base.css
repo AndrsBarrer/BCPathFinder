@@ -1,0 +1,98 @@
+/* Font Import */
+@import url('https://fonts.googleapis.com/css?family=Inter:700|Inter:400');
+
+/* Light and Dark Mode Variables */
+@media (prefers-color-scheme: light) {
+  :root {
+    --text: #111418;
+    --background: #f9fafb;
+    --primary: #09397b;
+    --secondary: #bfb1c9;
+    --accent: #a9b8d0;
+
+    /* Semantic variables */
+    --color-background: var(--background);
+    --color-border: #d1d5db;
+    --color-heading: var(--text);
+    --color-text: var(--text);
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --text: #e7eaee;
+    --background: #040506;
+    --primary: #84b3f6;
+    --secondary: #44364e;
+    --accent: #2f3e56;
+
+    /* Semantic variables */
+    --color-background: var(--background);
+    --color-border: #374151;
+    --color-heading: var(--text);
+    --color-text: var(--text);
+  }
+}
+
+/* Global Styles */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  font-weight: normal;
+}
+
+/* Body Styling */
+body {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  color: var(--color-text);
+  background: var(--color-background);
+  transition:
+    color 0.5s,
+    background-color 0.5s;
+  line-height: 1.6;
+  font-family: 'Inter', sans-serif;
+  font-weight: 400;
+  font-size: 15px;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Headings */
+h1,
+h2,
+h3,
+h4,
+h5 {
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+}
+
+/* Font Sizes */
+html {
+  font-size: 100%;
+} /* 16px */
+
+h1 {
+  font-size: 4.21rem; /* 67.36px */
+}
+h2 {
+  font-size: 3.158rem; /* 50.56px */
+}
+h3 {
+  font-size: 2.369rem; /* 37.92px */
+}
+h4 {
+  font-size: 1.777rem; /* 28.48px */
+}
+h5 {
+  font-size: 1.333rem; /* 21.28px */
+}
+small {
+  font-size: 0.75rem; /* 12px */
+}
