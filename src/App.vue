@@ -1,6 +1,54 @@
-<script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+<template>
+  <div class="main-container">
+    <div class="map-container">
+      <div id="map"></div>
+    </div>
+    <div class="info-container">
+      <div class="selector-card">
+        <div class="selector-card-heading">Where to?</div>
 
+        <!-- This contains the row for From and To selectors -->
+        <div class="selectors">
+          <div>
+            <FloatLabel class="w-full md:w-56" variant="in">
+              <SelectComponent
+                id="on_label"
+                v-model="start"
+                :options="cities"
+                optionLabel="name"
+                filter
+                :maxSelectedLabels="3"
+                class="w-full"
+              />
+              <label for="on_label">From</label>
+            </FloatLabel>
+          </div>
+          to
+          <div>
+            <FloatLabel class="w-full md:w-56" variant="in">
+              <SelectComponent
+                id="on_label"
+                v-model="goal"
+                :options="cities"
+                optionLabel="name"
+                filter
+                :maxSelectedLabels="3"
+                class="w-full"
+              />
+              <label for="on_label">To</label>
+            </FloatLabel>
+          </div>
+        </div>
+      </div>
+      <div class="route-card">
+        <div v-for="(item, index) in path" :key="`city-${index}`">{{ item }}</div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { computed, ref, watch, onMounted } from 'vue'
 import { useDFS } from './composables/useDFS.js'
 
 const { Graph, Stack, dfs } = useDFS()
@@ -85,78 +133,52 @@ watch([start, goal], ([newStart, newGoal]) => {
     console.log('Path taken:', path)
   }
 })
+
+onMounted(() => {
+  const map = L.map('map').setView([27.728771759148433, -113.14918884489447], 6)
+
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+  }).addTo(map)
+})
 </script>
-
-<template>
-  <div class="main-container">
-    <div class="map">
-      <img src="./assets/mapBC.png" alt="Map of BC" width="500" height="600" />
-    </div>
-
-    <div class="info-container">
-      <div class="selector-card">
-        <div class="selector-card-heading">Where to?</div>
-
-        <div class="selectors">
-          <div>
-            <FloatLabel class="w-full md:w-56" variant="in">
-              <SelectComponent
-                id="on_label"
-                v-model="start"
-                :options="cities"
-                optionLabel="name"
-                filter
-                :maxSelectedLabels="3"
-                class="w-full"
-              />
-              <label for="on_label">From</label>
-            </FloatLabel>
-          </div>
-          to
-          <div>
-            <FloatLabel class="w-full md:w-56" variant="in">
-              <SelectComponent
-                id="on_label"
-                v-model="goal"
-                :options="cities"
-                optionLabel="name"
-                filter
-                :maxSelectedLabels="3"
-                class="w-full"
-              />
-              <label for="on_label">To</label>
-            </FloatLabel>
-          </div>
-        </div>
-      </div>
-      <div class="route-card">
-        <div v-for="(item, index) in path" :key="`city-${index}`">{{ item }}</div>
-      </div>
-    </div>
-  </div>
-</template>
 
 <style lang="scss" scoped>
 .main-container {
   display: flex;
-  width: 100%;
   justify-content: center;
   align-items: center;
+  height: 100vh;
+  height: 100dvh;
+  width: 100vw;
+  width: 100dvw;
+
+  .map-container {
+    display: flex;
+    width: 40%;
+    height: 60%;
+    border: 10px solid red;
+    justify-content: center;
+    align-items: center;
+    padding: 0px;
+    box-sizing: border-box;
+
+    #map {
+      width: 100%;
+      height: 100%;
+      min-width: 300px;
+    }
+  }
 
   .info-container {
     display: flex;
     flex-direction: column;
-    width: 100%;
-  }
-
-  .map {
-    width: 600px;
-    height: 400px;
+    margin: 10px 20px;
   }
 
   .route-card {
-    width: 100%;
-    margin: 10px 30px;
+    min-height: 200px;
     padding: 20px;
     background-color: var(--accent);
     border-radius: 10px;
@@ -166,9 +188,10 @@ watch([start, goal], ([newStart, newGoal]) => {
     display: flex;
     flex-direction: column;
     width: 100%;
-    min-width: 400px;
+    min-width: 300px;
+    box-sizing: border-box;
 
-    margin: 10px 30px;
+    margin: 10px 0px;
     padding: 20px;
     background-color: var(--accent);
     border-radius: 10px;
@@ -176,9 +199,11 @@ watch([start, goal], ([newStart, newGoal]) => {
     .selector-card-heading {
       margin-bottom: 10px;
     }
+
     .selectors {
-      gap: 10px;
       display: flex;
+      flex-direction: column;
+      gap: 10px;
       align-items: center;
     }
     div {
@@ -187,10 +212,29 @@ watch([start, goal], ([newStart, newGoal]) => {
   }
 }
 
-// When the map should take up a bigger space and the selectors should be moved down
-@media (max-width: 1200px) {
+// When the map should take up a bigger space and the selectors should be moved down,
+// and the selectors should go into columns so they fit on the screen
+@media (max-width: 768px) {
   .main-container {
     flex-direction: column;
+  }
+
+  .map-container {
+    display: flex;
+    border: 10px solid red;
+    width: 100%;
+    // height: 50vh;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    box-sizing: border-box;
+
+    #map {
+      width: 100%;
+      height: 100%;
+      min-height: 300px;
+      min-width: 400px;
+    }
   }
 }
 </style>
