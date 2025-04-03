@@ -1,9 +1,6 @@
 <template>
   <div class="main-container">
     <div class="map-container">
-      <div id="map"></div>
-    </div>
-    <div class="info-container">
       <div class="selector-card">
         <div class="selector-card-heading">Where to?</div>
 
@@ -23,7 +20,7 @@
               <label for="on_label">From</label>
             </FloatLabel>
           </div>
-          to
+
           <div>
             <FloatLabel class="w-full md:w-56" variant="in">
               <SelectComponent
@@ -40,6 +37,10 @@
           </div>
         </div>
       </div>
+
+      <div id="map"></div>
+    </div>
+    <div class="info-container">
       <div class="route-card">
         <div v-for="(item, index) in path" :key="`city-${index}`">{{ item }}</div>
       </div>
@@ -162,7 +163,7 @@ watch([start, goal], ([newStart, newGoal]) => {
 })
 
 onMounted(() => {
-  map.value = L.map('map').setView([27.728771759148433, -113.14918884489447], 6)
+  map.value = L.map('map').setView([30.794122744720397, -113.92508472537764], 6)
 
   L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
@@ -182,9 +183,10 @@ onMounted(() => {
   width: 100dvw;
 
   .map-container {
+    position: relative; /* Ensure this is relative so absolute positioning works inside */
     display: flex;
-    width: 40%;
-    height: 60%;
+    width: 70%;
+    height: 90%;
     justify-content: center;
     align-items: center;
     padding: 0px;
@@ -194,8 +196,84 @@ onMounted(() => {
       width: 100%;
       height: 100%;
       min-width: 300px;
+      z-index: 0; /* Ensure the map stays behind */
+    }
+
+    .selector-card {
+      position: absolute; /* Puts it on top of the map */
+      top: 10px; /* Adjust as needed */
+      left: 50%;
+      width: 60%;
+      max-width: 700px;
+      transform: translateX(-50%); /* Center it */
+      //background-color: white; /* Ensure it's visible */
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+      z-index: 2; /* Ensure it's above the map */
+
+      .selector-card-heading {
+        color: black;
+        font-weight: 1000;
+      }
+      .selectors {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        align-items: center;
+      }
+      div {
+        width: 100%;
+      }
     }
   }
+
+  // .map-container {
+  //   position: absolute;
+  //   display: flex;
+  //   width: 40%;
+  //   height: 60%;
+  //   justify-content: center;
+  //   align-items: center;
+  //   padding: 0px;
+  //   box-sizing: border-box;
+
+  //   #map {
+  //     position: relative;
+  //     width: 100%;
+  //     height: 100%;
+  //     min-width: 300px;
+  //     z-index: 0;
+  //   }
+
+  //   .selector-card {
+  //     position: relative;
+  //     display: flex;
+  //     flex-direction: column;
+  //     width: 100%;
+  //     min-width: 300px;
+  //     box-sizing: border-box;
+
+  //     margin: 10px 0px;
+  //     padding: 20px;
+  //     background-color: var(--accent);
+  //     border-radius: 10px;
+  //     z-index: 1;
+  //     .selector-card-heading {
+  //       margin-bottom: 10px;
+  //     }
+
+  //     .selectors {
+  //       display: flex;
+  //       flex-direction: column;
+  //       gap: 10px;
+  //       align-items: center;
+  //     }
+  //     div {
+  //       width: 100%;
+  //     }
+  //   }
+  // }
 
   .info-container {
     display: flex;
@@ -208,33 +286,6 @@ onMounted(() => {
     padding: 20px;
     background-color: var(--accent);
     border-radius: 10px;
-  }
-
-  .selector-card {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    min-width: 300px;
-    box-sizing: border-box;
-
-    margin: 10px 0px;
-    padding: 20px;
-    background-color: var(--accent);
-    border-radius: 10px;
-
-    .selector-card-heading {
-      margin-bottom: 10px;
-    }
-
-    .selectors {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      align-items: center;
-    }
-    div {
-      width: 100%;
-    }
   }
 }
 
