@@ -91,33 +91,33 @@ graph.addEdge('Guaymas', 'Ciudad Obregon')
 console.log(graph)
 
 const cities = ref([
-  { name: 'Agua Prieta' },
-  { name: 'Cabo San Lucas' },
-  { name: 'Caborca' },
-  { name: 'Cananea' },
-  { name: 'Ciudad Constitucion' },
-  { name: 'Ciudad Obregon' },
-  { name: 'Ensenada' },
-  { name: 'Guaymas' },
-  { name: 'Guerrero Negro' },
-  { name: 'Hermosillo' },
-  { name: 'La Paz' },
-  { name: 'Mexicali' },
-  { name: 'Moctezuma' },
-  { name: 'Mulege' },
-  { name: 'Nogales' },
-  { name: 'Puerto Penasco' },
-  { name: 'Rosarito' },
-  { name: 'San Carlos' },
-  { name: 'San Felipe' },
-  { name: 'San Jose del Cabo' },
-  { name: 'San Luis Rio Colorado' },
-  { name: 'San Quintin' },
-  { name: 'Santa Ana' },
-  { name: 'Santa Rosalia' },
-  { name: 'Sonoyta' },
-  { name: 'Tecate' },
-  { name: 'Tijuana' },
+  { name: 'Agua Prieta', lat: 31.3256, lng: -109.5481 },
+  { name: 'Cabo San Lucas', lat: 22.8905, lng: -109.9167 },
+  { name: 'Caborca', lat: 30.7167, lng: -112.1667 },
+  { name: 'Cananea', lat: 30.9813, lng: -110.2936 },
+  { name: 'Ciudad Constitucion', lat: 25.0325, lng: -111.6622 },
+  { name: 'Ciudad Obregon', lat: 27.4939, lng: -109.9389 },
+  { name: 'Ensenada', lat: 31.8667, lng: -116.6 },
+  { name: 'Guaymas', lat: 27.9194, lng: -110.9044 },
+  { name: 'Guerrero Negro', lat: 27.9708, lng: -114.0375 },
+  { name: 'Hermosillo', lat: 29.0729, lng: -110.9559 },
+  { name: 'La Paz', lat: 24.1426, lng: -110.3128 },
+  { name: 'Mexicali', lat: 32.6245, lng: -115.4523 },
+  { name: 'Moctezuma', lat: 29.8011, lng: -109.6744 },
+  { name: 'Mulege', lat: 26.8889, lng: -111.9817 },
+  { name: 'Nogales', lat: 31.3076, lng: -110.9422 },
+  { name: 'Puerto Penasco', lat: 31.3172, lng: -113.5361 },
+  { name: 'Rosarito', lat: 32.36, lng: -117.0513 },
+  { name: 'San Carlos', lat: 27.9608, lng: -111.0561 },
+  { name: 'San Felipe', lat: 31.0253, lng: -114.8466 },
+  { name: 'San Jose del Cabo', lat: 23.0589, lng: -109.6972 },
+  { name: 'San Luis Rio Colorado', lat: 32.4561, lng: -114.7714 },
+  { name: 'San Quintin', lat: 30.5592, lng: -115.9494 },
+  { name: 'Santa Ana', lat: 30.5392, lng: -111.1236 },
+  { name: 'Santa Rosalia', lat: 27.3394, lng: -112.2694 },
+  { name: 'Sonoyta', lat: 31.8672, lng: -112.8492 },
+  { name: 'Tecate', lat: 32.5686, lng: -116.6336 },
+  { name: 'Tijuana', lat: 32.5149, lng: -117.0382 },
 ])
 
 // If the start/goal value is different than the old value, rerun the path finder
@@ -125,22 +125,49 @@ const start = ref(null)
 const goal = ref(null)
 
 const path = ref(null)
+
+const map = ref(null) // Store map reference
+const polylineLayer = ref(null) // Store the active polyline
+
 // For now this will be instant, but I should include a button that says GO
 watch([start, goal], ([newStart, newGoal]) => {
-  console.log('Updated:', newStart?.name, newGoal?.name)
   if (newStart && newGoal) {
     path.value = dfs(graph, newStart.name, newGoal.name)
-    console.log('Path taken:', path)
+
+    if (!path.value || path.value.length < 2) return
+
+    const pathArray = Array.from(path.value)
+
+    // Get the coordinates for the full path
+    const pointList = pathArray
+      .map((cityName) => cities.value.find((c) => c.name === cityName))
+      .filter((city) => city) // Remove undefined values
+      .map((city) => new L.LatLng(city.lat, city.lng))
+
+    // Remove previous polyline if it exists
+    if (polylineLayer.value) {
+      map.value.removeLayer(polylineLayer.value)
+    }
+
+    // Draw new polyline
+    polylineLayer.value = new L.polyline(pointList, {
+      color: 'red',
+      weight: 3,
+      opacity: 0.5,
+      smoothFactor: 1,
+    })
+
+    polylineLayer.value.addTo(map.value) // Use map.value
   }
 })
 
 onMounted(() => {
-  const map = L.map('map').setView([27.728771759148433, -113.14918884489447], 6)
+  map.value = L.map('map').setView([27.728771759148433, -113.14918884489447], 6)
 
   L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
     attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-  }).addTo(map)
+  }).addTo(map.value)
 })
 </script>
 
@@ -158,7 +185,6 @@ onMounted(() => {
     display: flex;
     width: 40%;
     height: 60%;
-    border: 10px solid red;
     justify-content: center;
     align-items: center;
     padding: 0px;
@@ -221,7 +247,6 @@ onMounted(() => {
 
   .map-container {
     display: flex;
-    border: 10px solid red;
     width: 100%;
     // height: 50vh;
     justify-content: center;
