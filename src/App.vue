@@ -1,55 +1,59 @@
 <template>
   <div class="main-container">
-    <div class="map-container">
-      <div class="selector-card">
-        <div class="selector-card-heading">Where to?</div>
+    <!-- <h2>BCPathFinder</h2> -->
+    <div class="content">
+      <div class="map-container">
+        <div class="selector-card">
+          <!-- <div class="selector-card-heading">Where to?</div> -->
 
-        <!-- This contains the row for From and To selectors -->
-        <div class="selectors">
-          <div>
-            <FloatLabel class="w-full md:w-56" variant="in">
-              <SelectComponent
-                id="on_label"
-                v-model="start"
-                :options="cities"
-                optionLabel="name"
-                filter
-                :maxSelectedLabels="3"
-                class="w-full"
-              />
-              <label for="on_label">From</label>
-            </FloatLabel>
-          </div>
+          <!-- This contains the row for From and To selectors -->
+          <div class="selectors">
+            <div>
+              <FloatLabel class="w-full md:w-56" variant="in">
+                <SelectComponent
+                  id="on_label"
+                  v-model="start"
+                  :options="cities"
+                  optionLabel="name"
+                  filter
+                  :maxSelectedLabels="3"
+                  class="w-full"
+                />
+                <label for="on_label">From</label>
+              </FloatLabel>
+            </div>
 
-          <div>
-            <FloatLabel class="w-full md:w-56" variant="in">
-              <SelectComponent
-                id="on_label"
-                v-model="goal"
-                :options="cities"
-                optionLabel="name"
-                filter
-                :maxSelectedLabels="3"
-                class="w-full"
-              />
-              <label for="on_label">To</label>
-            </FloatLabel>
+            <div>
+              <FloatLabel class="w-full md:w-56" variant="in">
+                <SelectComponent
+                  id="on_label"
+                  v-model="goal"
+                  :options="cities"
+                  optionLabel="name"
+                  filter
+                  :maxSelectedLabels="3"
+                  class="w-full"
+                />
+                <label for="on_label">To</label>
+              </FloatLabel>
+            </div>
           </div>
         </div>
-      </div>
 
-      <div id="map"></div>
-    </div>
-    <div class="info-container">
-      <div class="route-card">
-        <div v-for="(item, index) in path" :key="`city-${index}`">{{ item }}</div>
+        <div id="map"></div>
+      </div>
+      <div class="info-container">
+        <div class="route-card">
+          <p>Path taken:</p>
+          <div v-for="(item, index) in path" :key="`city-${index}`">{{ item }}</div>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch, onMounted } from 'vue'
+import { ref, watch, onMounted } from 'vue'
 import { useDFS } from './composables/useDFS.js'
 
 const { Graph, Stack, dfs } = useDFS()
@@ -89,7 +93,7 @@ graph.addEdge('Agua Prieta', 'Moctezuma')
 graph.addEdge('Hermosillo', 'Moctezuma')
 graph.addEdge('Hermosillo', 'Guaymas')
 graph.addEdge('Guaymas', 'Ciudad Obregon')
-console.log(graph)
+console.log('Graph that has been created:', graph)
 
 const cities = ref([
   { name: 'Agua Prieta', lat: 31.3256, lng: -109.5481 },
@@ -128,9 +132,10 @@ const goal = ref(null)
 const path = ref(null)
 
 const map = ref(null) // Store map reference
-const polylineLayer = ref(null) // Store the active polyline
 
-// For now this will be instant, but I should include a button that says GO
+const polylineSegments = ref<L.Polyline[]>([]) // Stores all segment polylines
+const timeouts = ref<number[]>([]) // Stores all timeout IDs
+
 watch([start, goal], ([newStart, newGoal]) => {
   if (newStart && newGoal) {
     path.value = dfs(graph, newStart.name, newGoal.name)
@@ -145,25 +150,38 @@ watch([start, goal], ([newStart, newGoal]) => {
       .filter((city) => city) // Remove undefined values
       .map((city) => new L.LatLng(city.lat, city.lng))
 
-    // Remove previous polyline if it exists
-    if (polylineLayer.value) {
-      map.value.removeLayer(polylineLayer.value)
-    }
+    // Stop all pending animations
+    timeouts.value.forEach(clearTimeout)
+    timeouts.value = [] // Reset timeout list
 
-    // Draw new polyline
-    polylineLayer.value = new L.polyline(pointList, {
-      color: 'red',
-      weight: 3,
-      opacity: 0.5,
-      smoothFactor: 1,
+    // Remove previous segments before drawing new ones
+    polylineSegments.value.forEach((segment) => map.value.removeLayer(segment))
+    polylineSegments.value = [] // Reset segment array
+
+    pointList.forEach((point, index) => {
+      if (index === 0) return // Skip the first point since we need a pair
+
+      const timeoutId = setTimeout(() => {
+        const segment = [pointList[index - 1], point] // Get previous & current point
+
+        const segmentLine = new L.polyline(segment, {
+          color: '#09397b',
+          weight: 3,
+          opacity: 0.5,
+          smoothFactor: 10,
+        })
+
+        segmentLine.addTo(map.value)
+        polylineSegments.value.push(segmentLine) // Store segment for removal
+      }, index * 200) // Delay each segment by 200ms
+
+      timeouts.value.push(timeoutId) // Track timeout for cancellation
     })
-
-    polylineLayer.value.addTo(map.value) // Use map.value
   }
 })
 
 onMounted(() => {
-  map.value = L.map('map').setView([30.794122744720397, -113.92508472537764], 6)
+  map.value = L.map('map').setView([29.44643394178572, -113.84859151327343], 6)
 
   L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
@@ -175,6 +193,7 @@ onMounted(() => {
 <style lang="scss" scoped>
 .main-container {
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
   height: 100vh;
@@ -182,11 +201,22 @@ onMounted(() => {
   width: 100vw;
   width: 100dvw;
 
+  .content {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    height: 90dvh;
+    width: 100vw;
+    width: 100dvw;
+    margin-bottom: 20px;
+  }
+
   .map-container {
     position: relative; /* Ensure this is relative so absolute positioning works inside */
     display: flex;
     width: 70%;
-    height: 90%;
+    height: 100%;
     justify-content: center;
     align-items: center;
     padding: 0px;
@@ -200,22 +230,23 @@ onMounted(() => {
     }
 
     .selector-card {
-      position: absolute; /* Puts it on top of the map */
-      top: 10px; /* Adjust as needed */
+      position: absolute; // Puts it on top of the map
+      top: 10px;
       left: 50%;
-      width: 60%;
+      width: 40%;
+      min-width: 200px;
       max-width: 700px;
-      transform: translateX(-50%); /* Center it */
-      //background-color: white; /* Ensure it's visible */
+      transform: translateX(-50%);
       padding: 20px;
       border-radius: 10px;
       box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+      background: rgba(0, 0, 0, 0.1);
       z-index: 2; /* Ensure it's above the map */
 
-      .selector-card-heading {
-        color: black;
-        font-weight: 1000;
-      }
+      // .selector-card-heading {
+      //   color: black;
+      //   font-weight: 1000;
+      // }
       .selectors {
         display: flex;
         flex-direction: column;
@@ -228,89 +259,40 @@ onMounted(() => {
     }
   }
 
-  // .map-container {
-  //   position: absolute;
-  //   display: flex;
-  //   width: 40%;
-  //   height: 60%;
-  //   justify-content: center;
-  //   align-items: center;
-  //   padding: 0px;
-  //   box-sizing: border-box;
-
-  //   #map {
-  //     position: relative;
-  //     width: 100%;
-  //     height: 100%;
-  //     min-width: 300px;
-  //     z-index: 0;
-  //   }
-
-  //   .selector-card {
-  //     position: relative;
-  //     display: flex;
-  //     flex-direction: column;
-  //     width: 100%;
-  //     min-width: 300px;
-  //     box-sizing: border-box;
-
-  //     margin: 10px 0px;
-  //     padding: 20px;
-  //     background-color: var(--accent);
-  //     border-radius: 10px;
-  //     z-index: 1;
-  //     .selector-card-heading {
-  //       margin-bottom: 10px;
-  //     }
-
-  //     .selectors {
-  //       display: flex;
-  //       flex-direction: column;
-  //       gap: 10px;
-  //       align-items: center;
-  //     }
-  //     div {
-  //       width: 100%;
-  //     }
-  //   }
-  // }
-
   .info-container {
     display: flex;
     flex-direction: column;
     margin: 10px 20px;
+    width: 10%;
+    min-width: 200px;
+    border-radius: 10px;
+    background-color: var(--primary);
   }
 
   .route-card {
     min-height: 200px;
     padding: 20px;
-    background-color: var(--accent);
     border-radius: 10px;
+    color: (--color-text);
   }
 }
 
 // When the map should take up a bigger space and the selectors should be moved down,
 // and the selectors should go into columns so they fit on the screen
 @media (max-width: 768px) {
-  .main-container {
+  .content {
     flex-direction: column;
+    align-items: center;
+  }
+
+  .info-container {
+    max-height: 25vh;
+    min-height: 25vh;
+    overflow-y: auto; /* Enable scrolling */
   }
 
   .map-container {
-    display: flex;
-    width: 100%;
-    // height: 50vh;
-    justify-content: center;
-    align-items: center;
-    padding: 20px;
-    box-sizing: border-box;
-
-    #map {
-      width: 100%;
-      height: 100%;
-      min-height: 300px;
-      min-width: 400px;
-    }
+    min-height: 50vh;
   }
 }
 </style>

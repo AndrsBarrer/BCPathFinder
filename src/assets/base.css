@@ -14,7 +14,7 @@
     --color-background: var(--background);
     --color-border: #d1d5db;
     --color-heading: var(--text);
-    --color-text: var(--text);
+    --color-text: var(--background);
   }
 }
 
@@ -22,7 +22,7 @@
   :root {
     --text: #e7eaee;
     --background: #040506;
-    --primary: #84b3f6;
+    --primary: #09397b;
     --secondary: #44364e;
     --accent: #2f3e56;
 
@@ -71,6 +71,7 @@ h4,
 h5 {
   font-family: 'Inter', sans-serif;
   font-weight: 700;
+  color: var(--color-heading);
 }
 
 /* Font Sizes */
