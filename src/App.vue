@@ -191,7 +191,7 @@ watch([start, goal], ([newStart, newGoal]) => {
 
         const segmentLine = new L.polyline(segment, {
           color: '#09397b',
-          weight: 3,
+          weight: 5,
           opacity: 0.5,
           smoothFactor: 10,
         })
