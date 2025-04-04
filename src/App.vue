@@ -40,7 +40,7 @@
       </div>
       <div class="map-container">
         <div class="route-card">
-          <h5>Path</h5>
+          <h5>Path ({{ totalDistance.toFixed(2) }} km)</h5>
           <div v-for="(item, index) in path" :key="`city-${index}`">{{ item }}</div>
         </div>
 
@@ -54,7 +54,7 @@
 import { ref, watch, onMounted } from 'vue'
 import { useDFS } from './composables/useDFS.js'
 
-const { Graph, Stack, dfs } = useDFS()
+const { Graph, dfs, distanceTwoCoordinates } = useDFS()
 
 // No need to add distances, DFS does not need distances
 const graph = new Graph()
@@ -111,7 +111,7 @@ const cities = ref([
   { name: 'Nogales', lat: 31.3076, lng: -110.9422 },
   { name: 'Puerto Penasco', lat: 31.3172, lng: -113.5361 },
   { name: 'Rosarito', lat: 32.36, lng: -117.0513 },
-  { name: 'San Carlos', lat: 24.7942, lng: -112.131 },
+  { name: 'San Carlos', lat: 24.7887, lng: -112.1035 },
   { name: 'San Felipe', lat: 31.0253, lng: -114.8466 },
   { name: 'San Jose del Cabo', lat: 23.0589, lng: -109.6972 },
   { name: 'San Luis Rio Colorado', lat: 32.4561, lng: -114.7714 },
@@ -123,11 +123,15 @@ const cities = ref([
   { name: 'Tijuana', lat: 32.5149, lng: -117.0382 },
 ])
 
-// TODO
-// If it follows road, I can use the distance given in the map
-// If it doesnt follow the road, calculate the distance given the coordinates
+const findCityCoordinates = (cityToFind) => {
+  const found = cities.value.find((city) => city.name === cityToFind)
 
-// Linear distance between cities given the coordinates, its an equation because of the curvature of the earth
+  if (found) {
+    return [found.lat, found.lng]
+  } else {
+    return null
+  }
+}
 
 // If the start/goal value is different than the old value, rerun the path finder
 const start = ref(null)
@@ -140,6 +144,9 @@ const map = ref(null) // Store map reference
 const polylineSegments = ref<L.Polyline[]>([]) // Stores all segment polylines
 const timeouts = ref<number[]>([]) // Stores all timeout IDs
 
+// The distance between every individual point, using the Haversine formula
+const totalDistance = ref(0)
+
 watch([start, goal], ([newStart, newGoal]) => {
   if (newStart && newGoal) {
     path.value = dfs(graph, newStart.name, newGoal.name)
@@ -147,6 +154,20 @@ watch([start, goal], ([newStart, newGoal]) => {
     if (!path.value || path.value.length < 2) return
 
     const pathArray = Array.from(path.value)
+
+    totalDistance.value = 0
+
+    // Calculate the total distance
+    pathArray.forEach((city, index) => {
+      // Skip the first index since we need two points
+      if (index === 0) return
+
+      totalDistance.value += distanceTwoCoordinates(
+        findCityCoordinates(pathArray[index]),
+        findCityCoordinates(pathArray[index - 1]),
+      )
+    })
+    console.log('calculated:', totalDistance.value)
 
     // Get the coordinates for the full path
     const pointList = pathArray
@@ -253,9 +274,10 @@ onMounted(() => {
 
   .route-card {
     position: absolute; // Puts it on top of the map
-    bottom: 0px;
-    right: 0%;
-    min-height: 200px;
+    bottom: 0;
+    right: 0;
+    height: 200px;
+    max-height: 200px;
     max-width: 600px;
     width: calc(100% - 30px);
     margin: 10px 15px;
@@ -264,6 +286,7 @@ onMounted(() => {
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
     background: rgba(0, 0, 0, 0.8);
     z-index: 2; /* Ensure it's above the map */
+    overflow-y: auto;
   }
 }
 

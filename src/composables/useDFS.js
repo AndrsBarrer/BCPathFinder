@@ -57,6 +57,35 @@ export function useDFS() {
     }
   }
 
+  /*
+  Distance between two coordinate points
+  d = 2R * arcsin(sqrt(sin²((θ₂ - θ₁)/2) + cos(θ₁) * cos(θ₂) * sin²((φ₂ - φ₁)/2)))
+  R: Earth's radius (approximately 6371 kilometers or 3959 miles).
+  θ₁ and θ₂: Latitude of the two points in radians.
+  φ₁ and φ₂: Longitude of the two points in radians.
+  d: The distance between the two points.
+  */
+  const distanceTwoCoordinates = ([lat1, lng1], [lat2, lng2]) => {
+    const R = 6371
+
+    // Convert to each measurement to radians
+    const O1 = lat1 * (Math.PI / 180)
+    const O2 = lat2 * (Math.PI / 180)
+
+    const P1 = lng1 * (Math.PI / 180)
+    const P2 = lng2 * (Math.PI / 180)
+    // d = 2R * arcsin( sqrt( sin²( (θ₂ - θ₁)/2 ) + cos(θ₁) * cos(θ₂) * sin²( (φ₂ - φ₁)/2) ))
+    return (
+      2 *
+      R *
+      Math.asin(
+        Math.sqrt(
+          Math.sin((O2 - O1) / 2) ** 2 + Math.cos(O1) * Math.cos(O2) * Math.sin((P2 - P1) / 2) ** 2,
+        ),
+      )
+    )
+  }
+
   // DFS implementation using the Graph and Stack classes
   const dfs = (graph, start, goal) => {
     let stack = new Stack() // Stack for the nodes that need to be visited
@@ -94,5 +123,5 @@ export function useDFS() {
     console.log('Goal not found')
   }
 
-  return { Graph, Stack, dfs }
+  return { Graph, dfs, distanceTwoCoordinates }
 }
