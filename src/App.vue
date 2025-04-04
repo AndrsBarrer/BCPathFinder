@@ -44,6 +44,8 @@
       </div>
       <div class="info-container">
         <div class="route-card">
+          <p>Total Distance: {{ totalDistance.toFixed(2) }} km</p>
+          <br />
           <p>Path taken:</p>
           <div v-for="(item, index) in path" :key="`city-${index}`">{{ item }}</div>
         </div>
@@ -56,7 +58,7 @@
 import { ref, watch, onMounted } from 'vue'
 import { useDFS } from './composables/useDFS.js'
 
-const { Graph, Stack, dfs } = useDFS()
+const { Graph, dfs, distanceTwoCoordinates } = useDFS()
 
 // No need to add distances, DFS does not need distances
 const graph = new Graph()
@@ -125,6 +127,16 @@ const cities = ref([
   { name: 'Tijuana', lat: 32.5149, lng: -117.0382 },
 ])
 
+const findCityCoordinates = (cityToFind) => {
+  const found = cities.value.find((city) => city.name === cityToFind)
+
+  if (found) {
+    return [found.lat, found.lng]
+  } else {
+    return null
+  }
+}
+
 // If the start/goal value is different than the old value, rerun the path finder
 const start = ref(null)
 const goal = ref(null)
@@ -136,6 +148,9 @@ const map = ref(null) // Store map reference
 const polylineSegments = ref<L.Polyline[]>([]) // Stores all segment polylines
 const timeouts = ref<number[]>([]) // Stores all timeout IDs
 
+// The distance between every individual point, using the Haversine formula
+const totalDistance = ref(0)
+
 watch([start, goal], ([newStart, newGoal]) => {
   if (newStart && newGoal) {
     path.value = dfs(graph, newStart.name, newGoal.name)
@@ -143,6 +158,20 @@ watch([start, goal], ([newStart, newGoal]) => {
     if (!path.value || path.value.length < 2) return
 
     const pathArray = Array.from(path.value)
+
+    totalDistance.value = 0
+
+    // Calculate the total distance
+    pathArray.forEach((city, index) => {
+      // Skip the first index since we need two points
+      if (index === 0) return
+
+      totalDistance.value += distanceTwoCoordinates(
+        findCityCoordinates(pathArray[index]),
+        findCityCoordinates(pathArray[index - 1]),
+      )
+    })
+    console.log('calculated:', totalDistance.value)
 
     // Get the coordinates for the full path
     const pointList = pathArray
