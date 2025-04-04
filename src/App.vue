@@ -115,7 +115,7 @@ const cities = ref([
   { name: 'Nogales', lat: 31.3076, lng: -110.9422 },
   { name: 'Puerto Penasco', lat: 31.3172, lng: -113.5361 },
   { name: 'Rosarito', lat: 32.36, lng: -117.0513 },
-  { name: 'San Carlos', lat: 27.9608, lng: -111.0561 },
+  { name: 'San Carlos', lat: 24.7887, lng: -112.1035 },
   { name: 'San Felipe', lat: 31.0253, lng: -114.8466 },
   { name: 'San Jose del Cabo', lat: 23.0589, lng: -109.6972 },
   { name: 'San Luis Rio Colorado', lat: 32.4561, lng: -114.7714 },

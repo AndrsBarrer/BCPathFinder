@@ -65,7 +65,6 @@ export function useDFS() {
   φ₁ and φ₂: Longitude of the two points in radians.
   d: The distance between the two points.
   */
-
   const distanceTwoCoordinates = ([lat1, lng1], [lat2, lng2]) => {
     const R = 6371
 
