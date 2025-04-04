@@ -2,51 +2,49 @@
   <div class="main-container">
     <!-- <h2>BCPathFinder</h2> -->
     <div class="content">
-      <div class="map-container">
-        <div class="selector-card">
-          <!-- <div class="selector-card-heading">Where to?</div> -->
+      <div class="selector-card">
+        <!-- <div class="selector-card-heading">Where to?</div> -->
 
-          <!-- This contains the row for From and To selectors -->
-          <div class="selectors">
-            <div>
-              <FloatLabel class="w-full md:w-56" variant="in">
-                <SelectComponent
-                  id="on_label"
-                  v-model="start"
-                  :options="cities"
-                  optionLabel="name"
-                  filter
-                  :maxSelectedLabels="3"
-                  class="w-full"
-                />
-                <label for="on_label">From</label>
-              </FloatLabel>
-            </div>
-
-            <div>
-              <FloatLabel class="w-full md:w-56" variant="in">
-                <SelectComponent
-                  id="on_label"
-                  v-model="goal"
-                  :options="cities"
-                  optionLabel="name"
-                  filter
-                  :maxSelectedLabels="3"
-                  class="w-full"
-                />
-                <label for="on_label">To</label>
-              </FloatLabel>
-            </div>
+        <!-- This contains the row for From and To selectors -->
+        <div class="selectors">
+          <div>
+            <FloatLabel class="w-full md:w-56" variant="in">
+              <SelectComponent
+                id="on_label"
+                v-model="start"
+                :options="cities"
+                optionLabel="name"
+                filter
+                :maxSelectedLabels="3"
+                class="w-full"
+              />
+              <label for="on_label">From</label>
+            </FloatLabel>
           </div>
+
+          <div>
+            <FloatLabel class="w-full md:w-56" variant="in">
+              <SelectComponent
+                id="on_label"
+                v-model="goal"
+                :options="cities"
+                optionLabel="name"
+                filter
+                :maxSelectedLabels="3"
+                class="w-full"
+              />
+              <label for="on_label">To</label>
+            </FloatLabel>
+          </div>
+        </div>
+      </div>
+      <div class="map-container">
+        <div class="route-card">
+          <h5>Path</h5>
+          <div v-for="(item, index) in path" :key="`city-${index}`">{{ item }}</div>
         </div>
 
         <div id="map"></div>
-      </div>
-      <div class="info-container">
-        <div class="route-card">
-          <p>Path taken:</p>
-          <div v-for="(item, index) in path" :key="`city-${index}`">{{ item }}</div>
-        </div>
       </div>
     </div>
   </div>
@@ -113,7 +111,7 @@ const cities = ref([
   { name: 'Nogales', lat: 31.3076, lng: -110.9422 },
   { name: 'Puerto Penasco', lat: 31.3172, lng: -113.5361 },
   { name: 'Rosarito', lat: 32.36, lng: -117.0513 },
-  { name: 'San Carlos', lat: 27.9608, lng: -111.0561 },
+  { name: 'San Carlos', lat: 24.7942, lng: -112.131 },
   { name: 'San Felipe', lat: 31.0253, lng: -114.8466 },
   { name: 'San Jose del Cabo', lat: 23.0589, lng: -109.6972 },
   { name: 'San Luis Rio Colorado', lat: 32.4561, lng: -114.7714 },
@@ -124,6 +122,12 @@ const cities = ref([
   { name: 'Tecate', lat: 32.5686, lng: -116.6336 },
   { name: 'Tijuana', lat: 32.5149, lng: -117.0382 },
 ])
+
+// TODO
+// If it follows road, I can use the distance given in the map
+// If it doesnt follow the road, calculate the distance given the coordinates
+
+// Linear distance between cities given the coordinates, its an equation because of the curvature of the earth
 
 // If the start/goal value is different than the old value, rerun the path finder
 const start = ref(null)
@@ -203,53 +207,24 @@ onMounted(() => {
 
   .content {
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
     height: 100vh;
-    height: 90dvh;
+    height: 100dvh;
     width: 100vw;
     width: 100dvw;
-    margin-bottom: 20px;
-  }
-
-  .map-container {
-    position: relative; /* Ensure this is relative so absolute positioning works inside */
-    display: flex;
-    width: 70%;
-    height: 100%;
-    justify-content: center;
-    align-items: center;
-    padding: 0px;
-    box-sizing: border-box;
-
-    #map {
-      width: 100%;
-      height: 100%;
-      min-width: 300px;
-      z-index: 0; /* Ensure the map stays behind */
-    }
 
     .selector-card {
-      position: absolute; // Puts it on top of the map
-      top: 10px;
-      left: 50%;
-      width: 40%;
-      min-width: 200px;
-      max-width: 700px;
-      transform: translateX(-50%);
+      display: flex;
+      width: clamp(100px, 100vw, 1000px);
       padding: 20px;
       border-radius: 10px;
       box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
-      background: rgba(0, 0, 0, 0.1);
-      z-index: 2; /* Ensure it's above the map */
+      background: rgba(0, 0, 0, 0.2);
 
-      // .selector-card-heading {
-      //   color: black;
-      //   font-weight: 1000;
-      // }
       .selectors {
         display: flex;
-        flex-direction: column;
         gap: 10px;
         align-items: center;
       }
@@ -259,40 +234,43 @@ onMounted(() => {
     }
   }
 
-  .info-container {
+  .map-container {
+    position: relative; /* Ensure this is relative so absolute positioning works inside */
     display: flex;
-    flex-direction: column;
-    margin: 10px 20px;
-    width: 10%;
-    min-width: 200px;
-    border-radius: 10px;
-    background-color: var(--primary);
+    width: 100%;
+    height: 100%;
+    justify-content: center;
+    align-items: center;
+    box-sizing: border-box;
+
+    #map {
+      width: 100%;
+      height: 100%;
+      min-width: 300px;
+      z-index: 0; /* Ensure the map stays behind */
+    }
   }
 
   .route-card {
+    position: absolute; // Puts it on top of the map
+    bottom: 0px;
+    right: 0%;
     min-height: 200px;
+    max-width: 600px;
+    width: calc(100% - 30px);
+    margin: 10px 15px;
     padding: 20px;
     border-radius: 10px;
-    color: (--color-text);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+    background: rgba(0, 0, 0, 0.8);
+    z-index: 2; /* Ensure it's above the map */
   }
 }
 
-// When the map should take up a bigger space and the selectors should be moved down,
-// and the selectors should go into columns so they fit on the screen
-@media (max-width: 768px) {
-  .content {
+@media screen and (max-width: 768px) {
+  .selectors {
+    display: flex;
     flex-direction: column;
-    align-items: center;
-  }
-
-  .info-container {
-    max-height: 25vh;
-    min-height: 25vh;
-    overflow-y: auto; /* Enable scrolling */
-  }
-
-  .map-container {
-    min-height: 50vh;
   }
 }
 </style>
