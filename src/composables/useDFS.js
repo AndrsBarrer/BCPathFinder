@@ -94,6 +94,8 @@ export function useDFS() {
     // Put the starting place in the stack
     stack.push(start)
 
+    let lastVisit = null
+
     while (!stack.isEmpty()) {
       const currentVisit = stack.pop()
       if (currentVisit === goal) {
@@ -106,9 +108,21 @@ export function useDFS() {
       if (!visited.has(currentVisit)) {
         // Add the node to the visited list
         visited.add(currentVisit)
-        console.log(`Visiting: ${currentVisit}`)
+        //console.log(`Visiting: ${currentVisit}`)
+        lastVisit = currentVisit
 
         const neighbors = graph.getNeighbors(currentVisit)
+        // console.log(`Neighbors: ${neighbors}`)
+        // console.log('Visited:', visited)
+
+        // console.log('neighbors.length: ', neighbors.length)
+        // console.log('neighbors[0]: ', neighbors[0])
+        // console.log('lastVisit: ', lastVisit)
+        if (neighbors.length === 1 && visited.has(neighbors[0])) {
+          //console.log('This is where it should stop')
+          return visited
+        }
+        // console.log('\n\n')
 
         neighbors.forEach((neighbor) => {
           // Do not want to visit the neighbors of that node, iterate through all nodes for the current node

@@ -40,7 +40,7 @@
       </div>
       <div class="map-container">
         <div class="route-card">
-          <h5>Path ({{ totalDistance.toFixed(2) }} km)</h5>
+          <h5>Path ({{ totalDistance.toFixed(2) }} km) {{ routeNotFound ? 'NOT FOUND' : '' }}</h5>
           <div v-for="(item, index) in path" :key="`city-${index}`">{{ item }}</div>
         </div>
 
@@ -138,6 +138,7 @@ const start = ref(null)
 const goal = ref(null)
 
 const path = ref(null)
+const routeNotFound = ref(false) // Set this value when the path could not be found, used to indicate on UI
 
 const map = ref(null) // Store map reference
 
@@ -151,9 +152,17 @@ watch([start, goal], ([newStart, newGoal]) => {
   if (newStart && newGoal) {
     path.value = dfs(graph, newStart.name, newGoal.name)
 
+    // Reset the value before checking
+    routeNotFound.value = false
+
     if (!path.value || path.value.length < 2) return
 
     const pathArray = Array.from(path.value)
+
+    // Compare if the last element of the path is the same as the goal
+    if (newGoal.name !== pathArray[pathArray.length - 1]) {
+      routeNotFound.value = true
+    }
 
     totalDistance.value = 0
 
